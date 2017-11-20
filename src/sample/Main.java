@@ -7,9 +7,18 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.control.*;
+import java.awt.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.*;
 
 public class Main extends Application {
@@ -22,8 +31,12 @@ public class Main extends Application {
     Scene scene;
     Calendar calendar;
     GridPane grid;
+    GridPane gridWeek;
     ComboBox<String> months;
     ComboBox<Integer> years;
+    Label date;
+    String day;
+    String month;
 
     public static void main(String[] args) {
         launch(args);
@@ -35,6 +48,7 @@ public class Main extends Application {
         primaryStage.setTitle("Calendar");
         scene = new Scene(root);
         primaryStage.setScene(scene);
+        date = (Label) scene.lookup("#date");
 
         months = (ComboBox) scene.lookup("#month");
         years = (ComboBox) scene.lookup("#year");
@@ -73,6 +87,7 @@ public class Main extends Application {
 
 
         create();
+        build(day, month);
         display();
 
 
@@ -83,6 +98,7 @@ public class Main extends Application {
                 display();
             }
         });
+
 
     }
 
@@ -97,6 +113,37 @@ public class Main extends Application {
                 label.setOnMouseEntered(e -> label.setStyle(HOVERED_LABEL_STYLE));
                 label.setOnMouseExited(e -> label.setStyle(IDLE_LABEL_STYLE));
                 label.setVisible(false);
+                label.setOnMouseClicked((mouseEvent) -> {
+
+                    day = label.getText();
+                    month = months.getValue();
+                    int year = years.getValue();
+                    date.setText(day + " " + month + " " + year);
+
+                    for(int l = 0; l <  7; l++){
+                        Label labelWeekDay = (Label)scene.lookup("#" +(l+1)  );
+                        String IdLabel = label.getId();
+                        String[] splitedId = IdLabel.split("");
+                        String row = splitedId[1];
+                        Label oldLabel = (Label)scene.lookup("#" + l+row  );
+
+                        labelWeekDay.setText(days.get(l) + ". " + (monthName.indexOf(month)+1) + "/"+oldLabel.getText()  );
+                        labelWeekDay.setTextFill(Color.web("#000000"));
+                        if(day.equals(oldLabel.getText())  ){
+                            labelWeekDay.setTextFill(Color.web("#FF7600"));
+                        }
+                        
+                    }
+
+                    /**
+                    try {
+                        Connection.makeConnection(day, month, year);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+
+                    }**/
+
+                });
                 grid = (GridPane) scene.lookup("#grid");
                 grid.add(label, i, j);
 
@@ -150,6 +197,42 @@ public class Main extends Application {
                 temp2++;
             }
         }
+    }
+
+    public void build(String day, String month){
+
+        gridWeek = (GridPane) scene.lookup("#gridWeek");
+        String labelText;
+        for(int i = 1; i <= 24; i++){
+            if(i < 10) {
+                labelText = "0" + i + ":00";
+            }else{
+                labelText = i + ":00";
+            }
+
+            Label label = new Label(labelText);
+            label.setPrefSize( Double.MAX_VALUE, Double.MAX_VALUE );
+            label.setAlignment(Pos.CENTER_RIGHT);
+            gridWeek.add(label, 0, i);
+        }
+
+        for(int i = 1; i <=7; i++){
+            Label label = new Label();
+            label.setId(Integer.toString(i));
+            gridWeek.add(label, i, 0);
+
+        }
+
+        for (int i = 1; i <= 24; i++ ){
+            for(int j = 1; j <= 7; j++){
+                TextArea textArea = new TextArea();
+                textArea.setId(Integer.toString(i+j));
+                gridWeek =  (GridPane)scene.lookup("#gridWeek");
+                gridWeek.add(textArea, j, i);
+            }
+        }
+
+
     }
 
 }
